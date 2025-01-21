@@ -13,7 +13,7 @@ public static class DependencyInjectionConfig
     public static Result<IContainer> BuildContainer(Options options)
     {
         var builder = new ContainerBuilder();
-        var resultFile = FindMystemPath();
+        var resultFile = FindMystemPath("mystem");
         if (!resultFile.IsSuccess)
         {
             return Result.Fail<IContainer>(resultFile.Error);
@@ -46,11 +46,11 @@ public static class DependencyInjectionConfig
         return Result.Ok<IContainer>(builder.Build());
     }
 
-    private static Result<String> FindMystemPath()
+    public static Result<String> FindMystemPath(string path)
     {
         var containerResultFile = Result.Of(() =>
         {
-            var pathToMystem = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "mystem.exe" : "mysem";
+            var pathToMystem = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "mystem.exe" : path;
 
             if (!File.Exists(pathToMystem))
             {
