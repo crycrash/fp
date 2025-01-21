@@ -43,17 +43,16 @@ public class Program
             return;
         }
         var container = DependencyInjectionConfig.BuildContainer(options);
+        if (!container.IsSuccess)
+        {
+            Console.WriteLine($"Ошибка при создании DI-контейнера: {container.Error}");
+            return;
+        }
 
-        using var scope = container.BeginLifetimeScope();
-        try
-        {
-            scope.Resolve<ITagsCloudDrawingFacade>().DrawRectangle(options);
-            Console.WriteLine($"Облако тегов успешно сохранено в файл: {options.OutputFilePath}");
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Произошла ошибка: {ex.Message}");
-        }
+        using var scope = container.GetValueOrThrow().BeginLifetimeScope();
+        var drawingFacade = scope.Resolve<ITagsCloudDrawingFacade>();
+        drawingFacade.DrawRectangle(options);
+        Console.WriteLine($"Облако тегов успешно сохранено в файл: {options.OutputFilePath}");
     }
 
     private static void HandleErrors(IEnumerable<Error> errors)
