@@ -13,7 +13,12 @@ public class ImageSaver(ITagsCloudDrawer tagsCloudDrawer) : IImageSaver
         using var bitmapContext = new SkiaBitmapExportContext(lenght, width, 2.0f);
         var canvas = bitmapContext.Canvas;
         canvas.FontColor = Colors.Black;
-        canvas = tagsCloudDrawer.Draw(canvas, color, rectangleInformation);
+        var result = tagsCloudDrawer.Draw(canvas, color, rectangleInformation, lenght, width);
+        if (!result.IsSuccess){
+            Console.WriteLine(result.Error);
+            return;
+        }
+        canvas = result.GetValueOrThrow();
         using var image = bitmapContext.Image;
         using var stream = File.OpenWrite(filePath);
         image.Save(stream);

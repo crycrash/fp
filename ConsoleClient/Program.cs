@@ -45,7 +45,7 @@ public class Program
         var container = DependencyInjectionConfig.BuildContainer(options);
         if (!container.IsSuccess)
         {
-            Console.WriteLine($"Ошибка при создании DI-контейнера: {container.Error}");
+            Console.WriteLine($"Ошибка работы программы: {container.Error}");
             return;
         }
 

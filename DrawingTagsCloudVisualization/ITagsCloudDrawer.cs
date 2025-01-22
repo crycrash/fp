@@ -5,5 +5,5 @@ namespace DrawingTagsCloudVisualization;
 
 public interface ITagsCloudDrawer
 {
-    public ICanvas Draw(ICanvas canvas, string color, List<RectangleInformation> rectangleInformation);
+    public Result<ICanvas> Draw(ICanvas canvas, string color, List<RectangleInformation> rectangleInformation, int lenght, int width);
 }
