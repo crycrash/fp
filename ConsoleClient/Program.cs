@@ -12,7 +12,7 @@ public class Program
             .WithParsed(RunApplication)
             .WithNotParsed(HandleErrors);
     }
-    readonly static private HashSet<string> validPartsOfSpeech =
+    private static readonly HashSet<string> validPartsOfSpeech =
         [
             "S", "V", "A", "ADV", "NUM", "SPRO", "ADVPRO", "ANUM"
         ];

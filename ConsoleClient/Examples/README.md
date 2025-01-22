@@ -23,17 +23,7 @@ Args: dotnet run -- -c pink -o Examples/example3.png
 Args: dotnet run -- -a Fermat -o Examples/example4.png
 ![alt text](example4.png)
 
-# 6 example:
-
-Args: dotnet run -- -p S -o Examples/example5.png
-![alt text](example5.png)
-
 # 7 example:
 
 Args: dotnet run -- -d Altering -o Examples/example7.png
 ![alt text](example7.png)
-
-# 8 example:
-
-Args: dotnet run -- -p A,V -o Examples/example8.png -i Examples/example1.txt
-![alt text](example8.png)

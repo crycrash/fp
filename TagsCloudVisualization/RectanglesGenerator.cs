@@ -22,31 +22,23 @@ public class RectangleGenerator(ISpiral spiral) : IRectangleGenerator
     }
     private Result<List<RectangleInformation>> PutRectangles(Point center)
     {
-        var generalResult = Result.Of(() =>
+        var layouter = new CircularCloudLayouter(spiral, center);
+        foreach (var rect in rectangleData)
         {
-            var layouter = new CircularCloudLayouter(spiral, center);
-            foreach (var rect in rectangleData)
-            {
-                var result = layouter.PutNextRectangle(rect.Value);
-                if (!result.IsSuccess)
-                    throw new ArgumentException();
-                var tempRect = result.GetValueOrThrow();
-                rectangleInformation.Add(new RectangleInformation(tempRect, rect.Key));
-            }
-            return rectangleInformation;
-        }, "Invalid rectangles");
-        return generalResult;
+            var result = layouter.PutNextRectangle(rect.Value);
+            if (!result.IsSuccess)
+                return Result.Fail<List<RectangleInformation>>("Invalid rectangles");
+            var tempRect = result.GetValueOrThrow();
+            rectangleInformation.Add(new RectangleInformation(tempRect, rect.Key));
+        }
+        return Result.Ok(rectangleInformation);
     }
     public Result<List<RectangleInformation>> ExecuteRectangles(Dictionary<string, int> frequencyRectangles, Point center)
     {
-        var generalResult = Result.Of(() =>
-        {
-            GenerateRectangles(frequencyRectangles);
-            var result = PutRectangles(center);
-            if (!result.IsSuccess)
-                throw new ArgumentException();
-            return result.GetValueOrThrow();
-        }, "Invalid rectangles");
-        return generalResult;
+        GenerateRectangles(frequencyRectangles);
+        var result = PutRectangles(center);
+        if (!result.IsSuccess)
+            return Result.Fail<List<RectangleInformation>>("Invalid rectangles");
+        return Result.Ok(result.GetValueOrThrow());
     }
 }

@@ -19,86 +19,51 @@ public static class DependencyInjectionConfig
             return Result.Fail<IContainer>(resultFile.Error);
         }
         var pathToMyStem = resultFile.GetValueOrThrow();
-        var result = RegisterMystem(builder, pathToMyStem);
-        if (!result.IsSuccess)
-        {
-            return Result.Fail<IContainer>(result.Error);
-        }
-
-        result = RegisterProcessingComponents(builder);
-        if (!result.IsSuccess)
-        {
-            return Result.Fail<IContainer>(result.Error);
-        }
-
-        result = RegisterSpiral(builder, options);
-        if (!result.IsSuccess)
-        {
-            return Result.Fail<IContainer>(result.Error);
-        }
-
-        result = RegisterDrawingComponents(builder, options);
-        if (!result.IsSuccess)
-        {
-            return Result.Fail<IContainer>(result.Error);
-        }
-
+        RegisterMystem(builder, pathToMyStem);
+        RegisterProcessingComponents(builder);
+        RegisterSpiral(builder, options);
+        RegisterDrawingComponents(builder, options);
         return Result.Ok<IContainer>(builder.Build());
     }
 
     public static Result<String> FindMystemPath(string path)
     {
-        var containerResultFile = Result.Of(() =>
-        {
-            var pathToMystem = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "mystem.exe" : path;
+        var pathToMystem = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "mystem.exe" : path;
 
-            if (!File.Exists(pathToMystem))
-            {
-                throw new FileNotFoundException();
-            }
-            return pathToMystem;
-        }, "Не удалось найти файл");
-        return containerResultFile;
+        if (!File.Exists(pathToMystem))
+        {
+            return Result.Fail<string>($"Не удалось найти файл");
+        }
+
+        return Result.Ok(pathToMystem);
     }
 
-    private static Result<ContainerBuilder> RegisterMystem(ContainerBuilder builder, string pathToMystem)
+    private static ContainerBuilder RegisterMystem(ContainerBuilder builder, string pathToMystem)
     {
-        var containerResult = Result.Of(() =>
+        builder.RegisterInstance(new MyStemWrapper.MyStem
         {
-            builder.RegisterInstance(new MyStemWrapper.MyStem
-            {
-                PathToMyStem = pathToMystem,
-                Parameters = "-ni"
-            }).As<MyStemWrapper.MyStem>().SingleInstance();
+            PathToMyStem = pathToMystem,
+            Parameters = "-ni"
+        }).As<MyStemWrapper.MyStem>().SingleInstance();
 
-            return builder;
-        }, "Ошибка при регистрации MyStem");
-
-        return containerResult;
+        return builder;
     }
 
-    private static Result<ContainerBuilder> RegisterProcessingComponents(ContainerBuilder builder)
+    private static ContainerBuilder RegisterProcessingComponents(ContainerBuilder builder)
     {
-        var containerResult = Result.Of(() =>
-        {
-            builder.RegisterType<MorphologicalProcessing>()
+        builder.RegisterType<MorphologicalProcessing>()
                 .As<IMorphologicalAnalyzer>()
                 .InstancePerDependency();
 
-            builder.RegisterType<TxtFileProcessor>()
-                .As<IFileProcessor>()
-                .InstancePerDependency();
-            return builder;
-        }, "Ошибка при регистрации компонентов обработки");
-
-        return containerResult;
+        builder.RegisterType<TxtFileProcessor>()
+            .As<IFileProcessor>()
+            .InstancePerDependency();
+        return builder;
     }
 
-    private static Result<ContainerBuilder> RegisterSpiral(ContainerBuilder builder, Options options)
+    private static ContainerBuilder RegisterSpiral(ContainerBuilder builder, Options options)
     {
-        var containerResult = Result.Of(() =>
-        {
-            builder.Register<ISpiral>(c =>
+        builder.Register<ISpiral>(c =>
             {
                 var centerPoint = new Point(options.CenterX, options.CenterY);
                 return options.AlgorithmForming switch
@@ -107,46 +72,38 @@ public static class DependencyInjectionConfig
                     _ => new FermatSpiral(centerPoint, 20),
                 };
             }).As<ISpiral>().InstancePerDependency();
-            return builder;
-        }, "Ошибка при регистрации спирали");
-
-        return containerResult;
+        return builder;
     }
 
-    private static Result<ContainerBuilder> RegisterDrawingComponents(ContainerBuilder builder, Options options)
+    private static ContainerBuilder RegisterDrawingComponents(ContainerBuilder builder, Options options)
     {
-        var containerResult = Result.Of(() =>
-        {
-            builder.RegisterType<WordHandler>()
+        builder.RegisterType<WordHandler>()
                 .As<IWordHandler>()
                 .InstancePerDependency();
 
-            builder.RegisterType<RectangleGenerator>()
-                .As<IRectangleGenerator>()
-                .InstancePerDependency();
+        builder.RegisterType<RectangleGenerator>()
+            .As<IRectangleGenerator>()
+            .InstancePerDependency();
 
-            builder.RegisterType<TagsCloudDrawingFacade>()
-                .As<ITagsCloudDrawingFacade>()
-                .InstancePerDependency();
+        builder.RegisterType<TagsCloudDrawingFacade>()
+            .As<ITagsCloudDrawingFacade>()
+            .InstancePerDependency();
 
-            builder.RegisterType<ImageSaver>()
-                .As<IImageSaver>()
-                .InstancePerDependency();
+        builder.RegisterType<ImageSaver>()
+            .As<IImageSaver>()
+            .InstancePerDependency();
 
-            switch (options.AlgorithmDrawing)
-            {
-                case "Altering":
-                    builder.RegisterType<AlternatingColorsTagsCloudDrawer>().As<ITagsCloudDrawer>()
-                        .InstancePerDependency();
-                    break;
-                default:
-                    builder.RegisterType<StandartTagsCloudDrawer>().As<ITagsCloudDrawer>()
-                        .InstancePerDependency();
-                    break;
-            }
-            return builder;
-        }, "Ошибка при регистрации компонентов рисования");
-
-        return containerResult;
+        switch (options.AlgorithmDrawing)
+        {
+            case "Altering":
+                builder.RegisterType<AlternatingColorsTagsCloudDrawer>().As<ITagsCloudDrawer>()
+                    .InstancePerDependency();
+                break;
+            default:
+                builder.RegisterType<StandartTagsCloudDrawer>().As<ITagsCloudDrawer>()
+                    .InstancePerDependency();
+                break;
+        }
+        return builder;
     }
 }

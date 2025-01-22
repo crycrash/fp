@@ -61,7 +61,7 @@ public class TestErrorHandling
         var result = Drawer.Draw(Canvas, "red", rectangleInformation, 400, 400);
 
         result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be("Ошибка при рисовании облака тегов");
+        result.Error.Should().Be("Text goes out of the canvas bounds");
     }
 
     [Test]
@@ -71,7 +71,7 @@ public class TestErrorHandling
 
         var result = Drawer.Draw(Canvas, "red", rectangleInformation, 400, 400);
         result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be("Ошибка при рисовании облака тегов");
+        result.Error.Should().Be("Empty list of rectangles");
     }
 
     [Test]
