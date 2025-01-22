@@ -13,13 +13,24 @@ public class TagsCloudDrawingFacade(
 
     public void DrawRectangle(Options options)
     {
-        var frequencyRectangles = _wordHandler.ProcessFile(options.InputFilePath, options.ExcludedPartOfSpeech);
-        var arrRect = _rectangleGenerator.ExecuteRectangles(frequencyRectangles, new Point(options.CenterX, options.CenterY));
+        var resultProcessFile = _wordHandler.ProcessFile(options.InputFilePath, options.ExcludedPartOfSpeech);
+        if (!resultProcessFile.IsSuccess){
+            Console.WriteLine(resultProcessFile.Error);
+            return;
+        }
+        var frequencyRectangles = resultProcessFile.GetValueOrThrow();
 
-        var result = _imageSaver.SaveToFile(options.OutputFilePath, options.Length, options.Width, options.Color, arrRect);
+        var resultExecute = _rectangleGenerator.ExecuteRectangles(frequencyRectangles, new Point(options.CenterX, options.CenterY));
+        if (!resultExecute.IsSuccess){
+            Console.WriteLine(resultProcessFile.Error);
+            return;
+        }
+        var arrRect = resultExecute.GetValueOrThrow();
 
-        if (!result.IsSuccess){
-            Console.WriteLine(result.Error);
+        var resultSave = _imageSaver.SaveToFile(options.OutputFilePath, options.Length, options.Width, options.Color, arrRect);
+
+        if (!resultSave.IsSuccess){
+            Console.WriteLine(resultSave.Error);
             return;
         }
     }

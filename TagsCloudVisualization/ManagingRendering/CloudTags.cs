@@ -17,27 +17,30 @@ public class CircularCloudLayouter
 
     public List<Rectangle> GetRectangles => rectangles;
 
-    public Rectangle PutNextRectangle(Size rectangleSize)
+    public Result<Rectangle> PutNextRectangle(Size rectangleSize)
     {
-        if (rectangleSize.IsEmpty)
-        {
-            throw new ArgumentNullException(nameof(rectangleSize), "rectangle is empty");
-        }
-        if (rectangleSize.Height <= 0 || rectangleSize.Width <= 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(rectangleSize), "side less or equal zero");
-        }
-        Rectangle tempRectangle;
-        do
-        {
-            Point nextPoint = spiral.GetNextPoint();
-            tempRectangle = new Rectangle(new Point(nextPoint.X, nextPoint.Y), rectangleSize);
-        }
-        while (IsRectangleIntersect(tempRectangle));
-        if (rectangles.Count > 1)
-            tempRectangle = TryToMoveRectangleNearToCenter(tempRectangle);
-        rectangles.Add(tempRectangle);
-        return tempRectangle;
+        var result = Result.Of(() =>{
+            if (rectangleSize.IsEmpty)
+            {
+                throw new ArgumentNullException(nameof(rectangleSize), "rectangle is empty");
+            }
+            if (rectangleSize.Height <= 0 || rectangleSize.Width <= 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(rectangleSize), "side less or equal zero");
+            }
+            Rectangle tempRectangle;
+            do
+            {
+                Point nextPoint = spiral.GetNextPoint();
+                tempRectangle = new Rectangle(new Point(nextPoint.X, nextPoint.Y), rectangleSize);
+            }
+            while (IsRectangleIntersect(tempRectangle));
+            if (rectangles.Count > 1)
+                tempRectangle = TryToMoveRectangleNearToCenter(tempRectangle);
+            rectangles.Add(tempRectangle);
+            return tempRectangle;
+        }, "Invalid rectangle");
+        return result;
     }
 
     private Rectangle TryToMoveRectangleNearToCenter(Rectangle rectangle)

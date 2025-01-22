@@ -20,19 +20,33 @@ public class RectangleGenerator(ISpiral spiral) : IRectangleGenerator
             rectangleData.Add(word.Key, rectangleSize);
         }
     }
-    private List<RectangleInformation> PutRectangles(Point center)
+    private Result<List<RectangleInformation>> PutRectangles(Point center)
     {
-        var layouter = new CircularCloudLayouter(spiral, center);
-        foreach (var rect in rectangleData)
+        var generalResult = Result.Of(() =>
         {
-            var tempRect = layouter.PutNextRectangle(rect.Value);
-            rectangleInformation.Add(new RectangleInformation(tempRect, rect.Key));
-        }
-        return rectangleInformation;
+            var layouter = new CircularCloudLayouter(spiral, center);
+            foreach (var rect in rectangleData)
+            {
+                var result = layouter.PutNextRectangle(rect.Value);
+                if (!result.IsSuccess)
+                    throw new ArgumentException();
+                var tempRect = result.GetValueOrThrow();
+                rectangleInformation.Add(new RectangleInformation(tempRect, rect.Key));
+            }
+            return rectangleInformation;
+        }, "Invalid rectangles");
+        return generalResult;
     }
-    public List<RectangleInformation> ExecuteRectangles(Dictionary<string, int> frequencyRectangles, Point center)
+    public Result<List<RectangleInformation>> ExecuteRectangles(Dictionary<string, int> frequencyRectangles, Point center)
     {
-        GenerateRectangles(frequencyRectangles);
-        return PutRectangles(center);
+        var generalResult = Result.Of(() =>
+        {
+            GenerateRectangles(frequencyRectangles);
+            var result = PutRectangles(center);
+            if (!result.IsSuccess)
+                throw new ArgumentException();
+            return result.GetValueOrThrow();
+        }, "Invalid rectangles");
+        return generalResult;
     }
 }

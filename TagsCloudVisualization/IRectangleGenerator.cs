@@ -4,5 +4,5 @@ namespace TagsCloudVisualization;
 
 public interface IRectangleGenerator
 {
-    public List<RectangleInformation> ExecuteRectangles(Dictionary<string, int> frequencyRectangles, Point center);
+    public Result<List<RectangleInformation>> ExecuteRectangles(Dictionary<string, int> frequencyRectangles, Point center);
 }
