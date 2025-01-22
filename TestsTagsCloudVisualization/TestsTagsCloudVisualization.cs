@@ -53,15 +53,15 @@ public class TestsCloudVisualization
     [Test]
     public void PutNextRectangle_ThrowingWhenLengthsNegative()
     {
-        Action action = new Action(() => circularCloudLayouter.PutNextRectangle(new Size(-1, -1)));
-        action.Should().Throw<ArgumentOutOfRangeException>().Which.Message.Should().Contain("side less or equal zero");
+        var result = circularCloudLayouter.PutNextRectangle(new Size(-1, -1));
+        result.IsSuccess.Should().BeFalse();
     }
 
     [Test]
     public void PutNextRectangle_ThrowingWhenRectangleEmpty()
     {
-        Action action = new Action(() => circularCloudLayouter.PutNextRectangle(Size.Empty));
-        action.Should().Throw<ArgumentNullException>().Which.Message.Should().Contain("rectangle is empty");
+        var result = circularCloudLayouter.PutNextRectangle(Size.Empty);
+        result.IsSuccess.Should().BeFalse();
     }
 
     [Test]

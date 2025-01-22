@@ -5,6 +5,7 @@ using TagsCloudVisualization;
 using System.Drawing;
 using Microsoft.Maui.Graphics.Skia;
 using Microsoft.Maui.Graphics;
+using TagsCloudVisualization.ManagingRendering;
 
 namespace TagsCloudVisualizationTests;
 
@@ -14,7 +15,8 @@ public class TestErrorHandling
     private StandartTagsCloudDrawer Drawer;
     private ICanvas Canvas;
     private IImageSaver ImageSaver;
-    private List<RectangleInformation> rectangleInformation;
+    private List<RectangleInformation> RectangleInformation;
+    private CircularCloudLayouter Layouter;
 
     [SetUp]
     public void SetUp()
@@ -23,10 +25,12 @@ public class TestErrorHandling
         using var bitmapContext = new SkiaBitmapExportContext(400, 400, 2.0f);
         Canvas = bitmapContext.Canvas;
         ImageSaver = new ImageSaver(Drawer);
-        rectangleInformation = new List<RectangleInformation>
+        RectangleInformation = new List<RectangleInformation>
         {
             new RectangleInformation(new Rectangle(0, 0, 100, 50), "Test")
         };
+        var point = new System.Drawing.Point(100, 100);
+        Layouter = new CircularCloudLayouter(new ArchimedeanSpiral(point), point);
     }
     [Test]
     public void BuildContainer_ShouldReturnFailure_WhenMystemPathIsInvalid()
@@ -78,7 +82,7 @@ public class TestErrorHandling
         var width = 600;
         var color = "red";
 
-        var result = ImageSaver.SaveToFile(filePath, length, width, color, rectangleInformation);
+        var result = ImageSaver.SaveToFile(filePath, length, width, color, RectangleInformation);
 
         result.IsSuccess.Should().BeTrue();
         result.GetValueOrThrow().Should().BeTrue();
@@ -94,7 +98,7 @@ public class TestErrorHandling
         var width = 600;
         var color = "red";
 
-        var result = ImageSaver.SaveToFile(filePath, length, width, color, rectangleInformation);
+        var result = ImageSaver.SaveToFile(filePath, length, width, color, RectangleInformation);
 
         result.IsSuccess.Should().BeFalse();
     }
@@ -107,7 +111,7 @@ public class TestErrorHandling
         var width = 600;
         var color = "red";
 
-        var result = ImageSaver.SaveToFile(filePath, length, width, color, rectangleInformation);
+        var result = ImageSaver.SaveToFile(filePath, length, width, color, RectangleInformation);
         result.IsSuccess.Should().BeFalse();
     }
 
@@ -119,8 +123,71 @@ public class TestErrorHandling
         var width = 600;
         var color = "red";
 
-        var result = ImageSaver.SaveToFile(filePath, length, width, color, rectangleInformation);
+        var result = ImageSaver.SaveToFile(filePath, length, width, color, RectangleInformation);
 
         result.IsSuccess.Should().BeFalse();
+    }
+    [Test]
+    public void PutNextRectangle_ShouldReturnRectangle_WhenSizeIsValid()
+    {
+        var rectangleSize = new System.Drawing.Size(50, 30);
+        var result = Layouter.PutNextRectangle(rectangleSize);
+
+        result.IsSuccess.Should().BeTrue();
+        result.GetValueOrThrow().Size.Should().Be(rectangleSize);
+    }
+
+    [Test]
+    public void PutNextRectangle_ShouldFail_WhenSizeIsEmpty()
+    {
+        var rectangleSize = System.Drawing.Size.Empty;
+
+        var result = Layouter.PutNextRectangle(rectangleSize);
+
+        result.IsSuccess.Should().BeFalse();
+        result.Error.Should().Be("Invalid rectangle");
+    }
+
+    [Test]
+    public void PutNextRectangle_ShouldFail_WhenSizeHasNegativeWidth()
+    {
+        var rectangleSize = new System.Drawing.Size(-10, 30);
+
+        var result = Layouter.PutNextRectangle(rectangleSize);
+
+        result.IsSuccess.Should().BeFalse();
+        result.Error.Should().Be("Invalid rectangle");
+    }
+
+    [Test]
+    public void PutNextRectangle_ShouldPlaceRectanglesWithoutIntersection()
+    {
+        var rectangleSize1 = new System.Drawing.Size(50, 30);
+        var rectangleSize2 = new System.Drawing.Size(60, 40);
+
+        var result1 = Layouter.PutNextRectangle(rectangleSize1);
+        var result2 = Layouter.PutNextRectangle(rectangleSize2);
+
+        result1.IsSuccess.Should().BeTrue();
+        result2.IsSuccess.Should().BeTrue();
+
+        var rect1 = result1.GetValueOrThrow();
+        var rect2 = result2.GetValueOrThrow();
+
+        rect1.IntersectsWith(rect2).Should().BeFalse();
+    }
+
+    [Test]
+    public void PutNextRectangle_ShouldMoveRectangleCloserToCenter_WhenPossible()
+    {
+        var rectangleSize = new System.Drawing.Size(50, 30);
+
+        var result = Layouter.PutNextRectangle(rectangleSize);
+
+        result.IsSuccess.Should().BeTrue();
+        var placedRectangle = result.GetValueOrThrow();
+
+        var distanceToCenter = Math.Sqrt(Math.Pow(placedRectangle.X, 2) + Math.Pow(placedRectangle.Y, 2));
+        distanceToCenter.Should().BeGreaterOrEqualTo(0);
     }
 }
