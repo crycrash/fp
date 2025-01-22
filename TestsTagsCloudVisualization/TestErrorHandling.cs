@@ -13,6 +13,8 @@ public class TestErrorHandling
 {
     private StandartTagsCloudDrawer Drawer;
     private ICanvas Canvas;
+    private IImageSaver ImageSaver;
+    private List<RectangleInformation> rectangleInformation;
 
     [SetUp]
     public void SetUp()
@@ -20,6 +22,11 @@ public class TestErrorHandling
         Drawer = new StandartTagsCloudDrawer();
         using var bitmapContext = new SkiaBitmapExportContext(400, 400, 2.0f);
         Canvas = bitmapContext.Canvas;
+        ImageSaver = new ImageSaver(Drawer);
+        rectangleInformation = new List<RectangleInformation>
+        {
+            new RectangleInformation(new Rectangle(0, 0, 100, 50), "Test")
+        };
     }
     [Test]
     public void BuildContainer_ShouldReturnFailure_WhenMystemPathIsInvalid()
@@ -61,5 +68,59 @@ public class TestErrorHandling
         var result = Drawer.Draw(Canvas, "red", rectangleInformation, 400, 400);
         result.IsSuccess.Should().BeFalse();
         result.Error.Should().Be("Ошибка при рисовании облака тегов");
+    }
+
+    [Test]
+    public void SaveToFile_ShouldReturnSuccess_WhenParametersAreValid()
+    {
+        var filePath = "output.png";
+        var length = 800;
+        var width = 600;
+        var color = "red";
+
+        var result = ImageSaver.SaveToFile(filePath, length, width, color, rectangleInformation);
+
+        result.IsSuccess.Should().BeTrue();
+        result.GetValueOrThrow().Should().BeTrue();
+        File.Exists(filePath).Should().BeTrue();
+        File.Delete(filePath);
+    }
+
+    [Test]
+    public void SaveToFile_ShouldFail_WhenFilePathIsEmpty()
+    {
+        var filePath = "";
+        var length = 800;
+        var width = 600;
+        var color = "red";
+
+        var result = ImageSaver.SaveToFile(filePath, length, width, color, rectangleInformation);
+
+        result.IsSuccess.Should().BeFalse();
+    }
+
+    [Test]
+    public void SaveToFile_ShouldFail_WhenCanvasDimensionsAreInvalid()
+    {
+        var filePath = "output.png";
+        var length = -800;
+        var width = 600;
+        var color = "red";
+
+        var result = ImageSaver.SaveToFile(filePath, length, width, color, rectangleInformation);
+        result.IsSuccess.Should().BeFalse();
+    }
+
+    [Test]
+    public void SaveToFile_ShouldFail_WhenFileCannotBeSaved()
+    {
+        var filePath = "/invalid_path/output.png";
+        var length = 800;
+        var width = 600;
+        var color = "red";
+
+        var result = ImageSaver.SaveToFile(filePath, length, width, color, rectangleInformation);
+
+        result.IsSuccess.Should().BeFalse();
     }
 }
